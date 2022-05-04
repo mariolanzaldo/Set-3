@@ -1,5 +1,5 @@
-class NotesAPI{
-    static getAllNotes(){
+class NotesAPI {
+    static getAllNotes() {
         const notes = JSON.parse(localStorage.getItem("notesapp-notes") || "[]");
 
         return notes.sort((a, b) => {
@@ -7,16 +7,18 @@ class NotesAPI{
         });
     }
 
-    static saveNote(noteToSave){
+    static saveNote(noteToSave) {
         const notes = NotesAPI.getAllNotes();
         const existing = notes.find(note => note.id == noteToSave.id);
 
-        if(existing){
-            existing.title = noteToSave.title;
-            existing.body = noteToSave.body;
-            existing.updated = new Date().toISOString();
-        }else{
-            noteToSave.id = Math.floor(Math.random()*1000000);
+        if (existing) {
+            if (existing.title !== noteToSave.title || existing.body !== noteToSave.body) {
+                existing.title = noteToSave.title;
+                existing.body = noteToSave.body;
+                existing.updated = new Date().toISOString();
+            }
+        } else {
+            noteToSave.id = Math.floor(Math.random() * 1000000);
             noteToSave.updated = new Date().toISOString();
             notes.push(noteToSave);
         }
@@ -24,7 +26,7 @@ class NotesAPI{
         localStorage.setItem("notesapp-notes", JSON.stringify(notes));
     }
 
-    static deleteNote(id){
+    static deleteNote(id) {
         const notes = NotesAPI.getAllNotes();
         const newNotes = notes.filter(note => note.id != id);
 
@@ -33,7 +35,7 @@ class NotesAPI{
 }
 
 class NotesView {
-    constructor (root, { onNoteSelect, onNoteEdit, onNoteAdd, onNoteDelete } = {}){
+    constructor(root, { onNoteSelect, onNoteEdit, onNoteAdd, onNoteDelete } = {}) {
         this.root = root;
         this.onNoteSelect = onNoteSelect;
         this.onNoteEdit = onNoteEdit;
@@ -54,12 +56,12 @@ class NotesView {
         const inpTitle = this.root.querySelector(".notes_title");
         const inpBody = this.root.querySelector(".notes_body");
 
-        btnAddNote.addEventListener("click", () =>{
+        btnAddNote.addEventListener("click", () => {
             this.onNoteAdd();
         });
 
         [inpTitle, inpBody].forEach(input => {
-            input.addEventListener("blur", () =>{
+            input.addEventListener("blur", () => {
                 const updatedTitle = inpTitle.value.trim();
                 const updatedBody = inpBody.value.trim();
 
@@ -71,103 +73,105 @@ class NotesView {
 
     }
 
-    createListItemHTML(id,title,body,updated){
+    createListItemHTML(id, title, body, created, updated) {
         const MAX_BODY_LENGTH = 65;
-
         return `
             <div class="notes_list-item" data-note-id="${id}">
                 <div class="notes_small-title"> ${title} </div>
                 <div class="notes_small-body"> 
-                ${body.substring(0,MAX_BODY_LENGTH)} 
-                ${body.length > MAX_BODY_LENGTH ? "...":""}
+                ${body.substring(0, MAX_BODY_LENGTH)} 
+                ${body.length > MAX_BODY_LENGTH ? "..." : ""}
+                </div>
+                <div class="notes_small-created">
+                Created: ${created} 
                 </div>
                 <div class="notes_small-updated">
-                ${updated.toLocaleString(undefined, { dateStyle: "full", timeStyle: "short"})} 
+                Updated: ${updated.toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })} 
                 </div>
                 <button class="notes_remove" type="button">Remove</button>
             </div>
         `;
     }
 
-    updateNoteList(notes){
+    updateNoteList(notes) {
         const notesListContainer = this.root.querySelector(".notes_list");
 
         notesListContainer.innerHTML = "";
 
-        for(const note of notes){
-            const html = this.createListItemHTML(note.id, note.title, note.body, new Date(note.updated));
+        for (const note of notes) {
+            const html = this.createListItemHTML(note.id, note.title, note.body, note.created, new Date(note.updated));
             notesListContainer.insertAdjacentHTML("beforeend", html);
         }
 
         notesListContainer.querySelectorAll(".notes_list-item").forEach(item => {
-            item.addEventListener("click", () =>{
-                    this.onNoteSelect(item.dataset.noteId);
+            item.addEventListener("click", () => {
+                this.onNoteSelect(item.dataset.noteId);
             });
         });
-        notesListContainer.querySelectorAll(".notes_remove").forEach(item =>{
-            item.addEventListener("dblclick", () =>{
+        notesListContainer.querySelectorAll(".notes_remove").forEach(item => {
+            item.addEventListener("dblclick", () => {
                 let doDelete = confirm("Are you sure you want to delete this note?");
 
-                if(doDelete){
+                if (doDelete) {
                     this.onNoteDelete(item.parentElement.dataset.noteId);
                 }
             });
         });
     }
 
-    updateActiveNote(note){
+    updateActiveNote(note) {
         this.root.querySelector(".notes_title").value = note.title;
         this.root.querySelector(".notes_body").value = note.body;
 
-        this.root.querySelectorAll(".notes_list-item").forEach(element =>{
+        this.root.querySelectorAll(".notes_list-item").forEach(element => {
             element.classList.remove("notes_list-item--selected");
         });
 
         this.root.querySelector(`.notes_list-item[data-note-id = "${note.id}"]`).classList.add("notes_list-item--selected");
     }
 
-    updateNotePreviewVisibility(visible){
-        this.root.querySelector(".notes_preview").style.visibility = visible ? "visible": "hidden";
+    updateNotePreviewVisibility(visible) {
+        this.root.querySelector(".notes_preview").style.visibility = visible ? "visible" : "hidden";
     }
 }
 
-class App{
-    constructor(root){
+class App {
+    constructor(root) {
         this.notes = [];
         this.activeNote = null;
-        this.view = new NotesView(root,this.handlers());
+        this.view = new NotesView(root, this.handlers());
 
         this.refreshNotes();
     }
 
-    refreshNotes(){
+    refreshNotes() {
         const notes = NotesAPI.getAllNotes();
 
         this.setNotes(notes);
-        if(notes.length > 0){
+        if (notes.length > 0) {
             this.setActiveNote(notes[0]);
 
         }
     }
 
-    setNotes(notes){
-        this.notes = notes; 
+    setNotes(notes) {
+        this.notes = notes;
         this.view.updateNoteList(notes);
         this.view.updateNotePreviewVisibility(notes.length > 0);
     }
 
-    setActiveNote(note){
+    setActiveNote(note) {
         this.activeNote = note;
         this.view.updateActiveNote(note);
     }
 
-    handlers () {
+    handlers() {
         return {
             onNoteSelect: noteId => {
                 const selectedNote = this.notes.find(note => note.id == noteId);
                 this.setActiveNote(selectedNote);
             },
-            onNoteEdit: (title, body) =>{
+            onNoteEdit: (title, body) => {
                 NotesAPI.saveNote({
                     id: this.activeNote.id,
                     title: title,
@@ -177,14 +181,16 @@ class App{
                 this.refreshNotes();
             },
             onNoteAdd: () => {
+                const date = new Date().toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" });
                 const newNote = {
                     title: "New note",
-                    body: "Take note..."
+                    body: "Take note...",
+                    created: `${date}`
                 };
                 NotesAPI.saveNote(newNote);
                 this.refreshNotes();
             },
-            onNoteDelete: noteId =>{
+            onNoteDelete: noteId => {
                 NotesAPI.deleteNote(noteId);
                 this.refreshNotes();
             }
