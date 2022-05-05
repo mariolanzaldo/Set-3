@@ -13,7 +13,7 @@ body {
     gap: 24px;
 }
 
-.note-list{
+.note-list {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
@@ -39,7 +39,7 @@ body {
     text-align: center;
     position: relative;
     gap: 10px;
-   width: auto;
+    width: auto;
 }
 
 .add-note {
