@@ -1,116 +1,57 @@
-html,body{
-    background-color: aliceblue;
-    height: 100%;
+body {
     margin: 0;
-    padding: 0;
+    background: #047eab;
 }
 
-.notes{
+#app {
     display: flex;
-    height: 100%;
-}
-
-.notes * {
-    font-family: sans-serif;
-}
-
-.notes_preview{
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    margin: 4em 3em;
     width: 100%;
+    height: 100%;
+    flex-wrap: wrap;
+    padding: 24px;
+    gap: 24px;
 }
 
-.notes_body,
-.notes_title{
+.note {
+    height: 250px;
+    width: 250px;
+    box-sizing: border-box;
+    padding: 16px;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+    resize: none;
+    font-size: 16px;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    text-align: center;
+    position: relative;
+    gap: 10px;
+   width: auto;
+}
+
+.add-note {
+    height: 250px;
+    width: 250px;
     border: none;
     outline: none;
-    width: 100%;
-}
-
-.notes_title{
-    background-color: rgb(104, 58, 144);
+    background: rgba(0, 0, 0, 0.25);
     border-radius: 10px;
-    color: whitesmoke;
-    font-size: 3.5em;
-    font-weight: bold;
-}
-
-.notes_body{
-    flex-grow: 1;
-    background-color: rgb(207, 204, 204);
-    border-radius: 10px;
-    font-size: 1.5em;
-    line-height: 1.5;
-    margin-top: 1em;
-    resize: none;
-}
-
-.notes_sidebar {
-    border-right: 2px solid #dddddd;
-    flex-shrink: 0;
-    overflow-y: auto;
-    padding: 1em;
-    width: 300px;
-}
-
-.notes_add{
-    background-color: rgb(115, 26, 197);
-    color: whitesmoke;
-    font-weight: bolder;
-    cursor: pointer;
-    border: none; 
-    border-radius: 10px;
-    padding: 1em 0;
-    margin: 1.5em;
-    font-size: 1.25em;
-    width: 80%;
-}
-
-.notes_add:hover{
-    background-color: rgb(140, 69, 207);
-}
-
-.notes_list-item{
+    font-size: 100px;
     cursor: pointer;
 }
 
-.notes_list-item--selected{
-    background-color: #dddddd;
-    border-radius: 7px;
-    font-weight: bold;
+.add-note:hover {
+    background: rgba(0, 0, 0, 0.4);
 }
 
-.notes_small-title,
-.notes_small-body{
-    padding: 5px;
-}
-
-.notes_remove{
-    background-color: rgb(115, 26, 197);
-    border: none;
-    cursor: pointer;
-    color: whitesmoke;
-    border-radius: 8px;
-}
-
-.notes_remove:hover{
-    background-color: rgb(140, 69, 207);
-}
-
-.notes_small-title {
-    font-size: 1.2em;
-}
-
-.notes_small-body {
-    padding: 0 10px;
-}
-
-.notes_small-updated,
-.notes_small-created{
-    font-style:oblique;
-    color: rgb(68, 66, 66);
-    font-size: 10px;
-    text-align: right;
+.note-creation,
+.note-update {
+    position: relative;
+    float: right;
+    font-size: 11px;
 }
