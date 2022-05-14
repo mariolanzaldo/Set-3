@@ -1,13 +1,12 @@
-class NotesAPI {
-    static getAllNotes() {
+const notesAPI = {
+    getAllNotes: function () {
         const notes = JSON.parse(localStorage.getItem("stickynotes-notes") || "[]");
         return notes.sort((a, b) => {
             return new Date(a.updated) > new Date(b.updated) ? -1 : 1;
         });
-    }
-
-    static saveNote(noteToSave) {
-        const notes = NotesAPI.getAllNotes();
+    },
+    saveNote: function (noteToSave) {
+        const notes = this.getAllNotes();
         const existing = notes.find(note => note.id == noteToSave.id);
 
         if (existing) {
@@ -16,16 +15,15 @@ class NotesAPI {
                 existing.updated = new Date().toISOString();
             }
         } else {
-            noteToSave.id = Math.floor(Math.random() * 1000000);
+            noteToSave.id = Date.now();
             noteToSave.updated = new Date().toISOString();
             notes.push(noteToSave);
         }
 
         localStorage.setItem("stickynotes-notes", JSON.stringify(notes));
-    }
-
-    static deleteNote(id) {
-        const notes = NotesAPI.getAllNotes();
+    },
+    deleteNote: function (id) {
+        const notes = this.getAllNotes();
         const newNotes = notes.filter(note => note.id != id);
         localStorage.setItem("stickynotes-notes", JSON.stringify(newNotes));
     }
@@ -37,24 +35,50 @@ class NotesView {
         this.onNoteAdd = onNoteAdd;
         this.onNoteEdit = onNoteEdit;
         this.onNoteDelete = onNoteDelete;
-        this.root.innerHTML = `
-        <button class="add-note" type="button">+</button>
-        <div class="note-list"></div>
-        `;
 
+        const template1 = document.querySelector(".template1").content;
+        const fragment = document.createDocumentFragment();
+
+        const clone = template1.cloneNode(true);
+        fragment.appendChild(clone);
+        this.root.appendChild(fragment);
         const btnAddNote = this.root.querySelector(".add-note");
 
         btnAddNote.addEventListener("click", () => {
             this.onNoteAdd(this.root);
         });
+
+        const allNotes = document.querySelector(".note-list");
+        allNotes.addEventListener("dblclick", item => {
+            if (item.target.className === 'note-remove') {
+                let doDelete = confirm("Are you sure you want to delete this note?");
+                if (doDelete) {
+                    this.onNoteDelete(item.target.parentElement.dataset.noteId);
+                }
+            }
+        });
     }
 
     createListItemHTML(id, content, created, updated) {
-        return ` <div class="container" data-note-id="${id}" id="${id}">
-        <textarea class="note" class="${id}" placeholder="Empty Note">${content}</textarea>
-        <div class="note-creation">Created: ${created}</div>
-        <div class="note-update" id="${id}">Updated: ${updated.toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}</div>
-    </div>`;
+        const template2 = document.querySelector(".template2").content;
+        const fragment = document.createDocumentFragment();
+
+        const cont = template2.querySelector(".container");
+        const note = template2.querySelector(".note");
+        const noteCreate = template2.querySelector(".note-creation");
+        const noteUpdate = template2.querySelector(".note-update");
+
+        cont.setAttribute("data-note-id", id);
+        cont.setAttribute("id", id);
+        note.setAttribute("id", id);
+        note.innerHTML = content;
+        noteCreate.innerHTML = `Created: ${created}`;
+        noteUpdate.setAttribute("id", id);
+        noteUpdate.innerHTML = `Updated: ${updated.toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}`;
+
+        const clone = template2.cloneNode(true);
+        fragment.appendChild(clone);
+        return fragment;
     }
 
     updateNoteList(notes) {
@@ -63,29 +87,39 @@ class NotesView {
 
         for (const note of notes) {
             const html = this.createListItemHTML(note.id, note.content, note.create, new Date(note.updated));
-            notesListContainer.insertAdjacentHTML("beforeend", html);
+            notesListContainer.appendChild(html);
         }
 
-        document.querySelectorAll(".note").forEach(item => {
-            item.addEventListener("change", () => {
-                const updatedBody = item.value.trim();
-                this.onNoteEdit(updatedBody, item.parentElement.dataset.noteId);
-            });
+        const allNotes = document.querySelector(".note-list");
 
-            item.addEventListener("dblclick", () => {
-                let doDelete = confirm("Are you sure you want to delete this note?");
+        allNotes.addEventListener('keydown', function (e) {
+            if (e.key == 'Tab' && e.target.className === "note") {
+                e.preventDefault();
+                let start = e.target.selectionStart;
+                let end = e.target.selectionEnd;
 
-                if (doDelete) {
-                    this.onNoteDelete(item.parentElement.dataset.noteId);
-                }
-            });
+                e.target.value = e.target.value.substring(0, start) +
+                    "\t" + e.target.value.substring(end);
+
+                e.target.selectionEnd = start + 1;
+            }
         });
+
+        allNotes.addEventListener("click", item => {
+            if (item.target.className === 'note-save') {
+                const updatedBody = item.target.previousElementSibling.value.trim();
+                this.onNoteEdit(updatedBody, item.target.parentElement.dataset.noteId);
+            }
+        });
+
     }
+
 }
 
 class App {
-    constructor(root) {
+    constructor(root, notesAPI) {
         this.notes = [];
+        this.notesAPI = notesAPI;
         this.activeNote = null;
         this.view = new NotesView(root, this.handlers());
 
@@ -94,7 +128,7 @@ class App {
     }
 
     refreshNotes() {
-        const notes = NotesAPI.getAllNotes();
+        const notes = this.notesAPI.getAllNotes();
         this.setNotes(notes);
     }
 
@@ -107,7 +141,7 @@ class App {
         return {
             onNoteEdit: (content, id) => {
 
-                NotesAPI.saveNote({
+                this.notesAPI.saveNote({
                     id: id,
                     content: content,
                 });
@@ -115,19 +149,19 @@ class App {
                 this.refreshNotes();
             },
             onNoteAdd: () => {
-                const notes = NotesAPI.getAllNotes();
+                const notes = this.notesAPI.getAllNotes();
 
                 const noteObject = {
-                    id: Math.floor(Math.random() * 100000),
+                    id: Date.now(),
                     content: "",
                     create: `${new Date().toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}`
                 }
                 notes.push(noteObject);
-                NotesAPI.saveNote(noteObject);
+                this.notesAPI.saveNote(noteObject);
                 this.refreshNotes();
             },
             onNoteDelete: noteId => {
-                NotesAPI.deleteNote(noteId);
+                this.notesAPI.deleteNote(noteId);
                 this.refreshNotes();
             }
         };
@@ -135,4 +169,4 @@ class App {
 }
 
 const root = document.getElementById("app");
-const app = new App(root);
+const app = new App(root, notesAPI);
