@@ -63,3 +63,27 @@ body {
     float: right;
     font-size: 11px;
 }
+
+.note-remove {
+    background-color: rgb(197, 86, 26);
+    border: none;
+    cursor: pointer;
+    color: whitesmoke;
+    border-radius: 8px;
+}
+
+.note-remove:hover {
+    background-color: rgb(172, 73, 20);
+}
+
+.note-save {
+    background-color: rgb(222, 14, 14);
+    border: none;
+    cursor: pointer;
+    color: whitesmoke;
+    border-radius: 8px;
+}
+
+.note-save:hover {
+    background-color: rgb(153, 20, 20);
+}
