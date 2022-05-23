@@ -49,7 +49,7 @@ class NotesView {
         });
 
         const allNotes = document.querySelector(".note-list");
-        allNotes.addEventListener("dblclick", item => {
+        allNotes.addEventListener("click", item => {
             if (item.target.className === 'note-remove') {
                 let doDelete = confirm("Are you sure you want to delete this note?");
                 if (doDelete) {
